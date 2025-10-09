@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>One-Shot Learning Playground</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        padding-top: 2rem;
+      }
+      .character-card {
+        border: 3px solid transparent;
+        border-radius: 10px;
+        padding: 10px;
+        margin: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .character-card:hover {
+        transform: scale(1.05);
+      }
+      .character-card.predicted {
+        border-color: #198754; /* Green for correct prediction */
+      }
+      .character-card.incorrect {
+        border-color: #dc3545; /* Red for incorrect prediction */
+      }
+      .character-card.true-match {
+        background-color: rgba(25, 135, 84, 0.1); /* Light green background */
+      }
+      .score-badge {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 2px 5px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+      }
+      #support-card {
+        margin-bottom: 20px;
+        border: 2px solid #0d6efd;
+        border-radius: 10px;
+        padding: 15px;
+        background-color: white;
+      }
+      #results-container {
+        margin-top: 20px;
+      }
+      .challenge-info {
+        background-color: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      }
+      .options-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .character-container {
+        position: relative;
+      }
+      .loading {
+        opacity: 0.5;
+      }
+      .spinner-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+      }
+      h1 {
+        font-weight: 700;
+        color: #0d6efd;
+      }
+      h3 {
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="text-center mb-4">
+        <h1>One-Shot Learning Interactive Playground</h1>
+        <p class="lead">
+          Can our Siamese Neural Network find the matching character with just
+          one example?
+        </p>
+      </header>
+
+      <div class="row">
+        <div class="col-md-4">
+          <div class="challenge-info">
+            <h3>How It Works</h3>
+            <p>
+              This demo showcases the power of Siamese Networks for one-shot
+              learning:
+            </p>
+            <ol>
+              <li>
+                A random character is displayed at the top (support image)
+              </li>
+              <li>
+                The grid shows 9 different characters, including another example
+                of the same character
+              </li>
+              <li>The network compares the support image to each option</li>
+              <li>
+                The AI predicts which character is the match based on learned
+                visual similarity
+              </li>
+            </ol>
+            <div class="d-grid">
+              <button id="new-challenge-btn" class="btn btn-primary">
+                New Challenge
+              </button>
+            </div>
+
+            <div class="mt-4">
+              <h4>Stats</h4>
+              <p>
+                Correct predictions: <span id="correct-count">0</span>/<span
+                  id="total-count"
+                  >0</span
+                >
+              </p>
+              <div class="progress">
+                <div
+                  id="accuracy-bar"
+                  class="progress-bar"
+                  role="progressbar"
+                  style="width: 0%"
+                  aria-valuenow="0"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  0%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-8">
+          <div id="main-container">
+            <div class="text-center" id="loading-message">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p>Loading challenge...</p>
+            </div>
+
+            <div id="game-container" style="display: none">
+              <div id="support-container" class="text-center mb-4">
+                <h3>Find a match for this character:</h3>
+                <div id="support-card">
+                  <img
+                    id="support-image"
+                    class="img-fluid"
+                    style="max-height: 120px"
+                    alt="Support character"
+                  />
+                </div>
+              </div>
+
+              <h3>Options:</h3>
+              <div class="options-container" id="options-container">
+                <!-- Options will be dynamically added here -->
+              </div>
+
+              <div
+                id="results-container"
+                class="mt-4 alert alert-info"
+                style="display: none"
+              >
+                <h4 id="result-heading"></h4>
+                <p id="result-message"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Global variables
+      let correctCount = 0;
+      let totalCount = 0;
+
+      // Function to update stats
+      function updateStats() {
+        document.getElementById("correct-count").textContent = correctCount;
+        document.getElementById("total-count").textContent = totalCount;
+
+        const accuracy =
+          totalCount > 0 ? ((correctCount / totalCount) * 100).toFixed(1) : 0;
+        const accuracyBar = document.getElementById("accuracy-bar");
+        accuracyBar.style.width = `${accuracy}%`;
+        accuracyBar.textContent = `${accuracy}%`;
+
+        // Change color based on accuracy
+        if (accuracy >= 80) {
+          accuracyBar.classList.remove("bg-warning", "bg-danger");
+          accuracyBar.classList.add("bg-success");
+        } else if (accuracy >= 50) {
+          accuracyBar.classList.remove("bg-success", "bg-danger");
+          accuracyBar.classList.add("bg-warning");
+        } else {
+          accuracyBar.classList.remove("bg-success", "bg-warning");
+          accuracyBar.classList.add("bg-danger");
+        }
+      }
+
+      // Function to load a new challenge
+      function loadNewChallenge() {
+        // Show loading
+        document.getElementById("loading-message").style.display = "block";
+        document.getElementById("game-container").style.display = "none";
+
+        // Hide previous results
+        document.getElementById("results-container").style.display = "none";
+
+        // Clear previous options
+        document.getElementById("options-container").innerHTML = "";
+
+        // Fetch new challenge from the API
+        fetch("/api/new-challenge")
+          .then((response) => response.json())
+          .then((data) => {
+            // Set the support image
+            document.getElementById(
+              "support-image"
+            ).src = `data:image/png;base64,${data.support_image}`;
+
+            // Generate option cards
+            const optionsContainer =
+              document.getElementById("options-container");
+
+            data.options.forEach((optionImage, index) => {
+              const isMatch = index === data.true_match_index;
+              const isPredicted = index === data.predicted_match_index;
+              const isCorrectPrediction =
+                data.true_match_index === data.predicted_match_index;
+
+              const optionDiv = document.createElement("div");
+              optionDiv.className = "character-container";
+
+              const card = document.createElement("div");
+              card.className = `character-card ${isMatch ? "true-match" : ""} ${
+                isPredicted
+                  ? isCorrectPrediction
+                    ? "predicted"
+                    : "incorrect"
+                  : ""
+              }`;
+              card.onclick = () =>
+                revealResult(
+                  index,
+                  data.true_match_index,
+                  data.predicted_match_index
+                );
+
+              const img = document.createElement("img");
+              img.src = `data:image/png;base64,${optionImage}`;
+              img.className = "img-fluid";
+              img.alt = `Option ${index + 1}`;
+
+              const score = document.createElement("span");
+              score.className = "score-badge";
+              score.textContent = data.scores[index].toFixed(3);
+
+              card.appendChild(img);
+              optionDiv.appendChild(card);
+              optionDiv.appendChild(score);
+              optionsContainer.appendChild(optionDiv);
+            });
+
+            // Hide loading, show game
+            document.getElementById("loading-message").style.display = "none";
+            document.getElementById("game-container").style.display = "block";
+          })
+          .catch((error) => {
+            console.error("Error loading challenge:", error);
+            alert("Failed to load challenge. Please try again.");
+          });
+      }
+
+      // Function to reveal the result when a card is clicked
+      function revealResult(clickedIndex, trueIndex, predictedIndex) {
+        const resultsContainer = document.getElementById("results-container");
+        const resultHeading = document.getElementById("result-heading");
+        const resultMessage = document.getElementById("result-message");
+
+        // Mark the clicked card
+        const cards = document.querySelectorAll(".character-card");
+
+        // Show all cards' status
+        cards.forEach((card, index) => {
+          if (index === trueIndex) {
+            card.classList.add("true-match");
+          }
+          if (index === predictedIndex) {
+            card.classList.add(
+              predictedIndex === trueIndex ? "predicted" : "incorrect"
+            );
+          }
+        });
+
+        // Update the result message
+        if (predictedIndex === trueIndex) {
+          resultsContainer.className = "mt-4 alert alert-success";
+          resultHeading.textContent = "✓ Correct Prediction!";
+          resultMessage.textContent =
+            "The model successfully identified the matching character!";
+          correctCount++;
+        } else {
+          resultsContainer.className = "mt-4 alert alert-danger";
+          resultHeading.textContent = "✗ Incorrect Prediction";
+          resultMessage.textContent =
+            "The model failed to find the correct match. The true match is highlighted in green.";
+        }
+
+        totalCount++;
+        updateStats();
+
+        // Show the results
+        resultsContainer.style.display = "block";
+      }
+
+      // Event listeners
+      document
+        .getElementById("new-challenge-btn")
+        .addEventListener("click", loadNewChallenge);
+
+      // Load the first challenge when the page loads
+      document.addEventListener("DOMContentLoaded", loadNewChallenge);
+    </script>
+  </body>
+</html>

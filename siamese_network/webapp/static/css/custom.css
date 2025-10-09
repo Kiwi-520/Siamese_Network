@@ -1,0 +1,212 @@
+/* Custom CSS for One-Shot Learning Interactive Playground */
+
+/* Image enhancement utilities */
+img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    -ms-interpolation-mode: nearest-neighbor;
+}
+
+/* Animation for interactions */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse {
+    animation: pulse 1s infinite;
+}
+
+/* Improved navigation tab styling */
+.nav-pills {
+    border-radius: 15px;
+    padding: 5px;
+    background-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Character visualization improvements */
+#support-card img {
+    filter: contrast(1.4) brightness(1.1);
+    image-rendering: auto !important;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    width: 160px;
+    height: 160px;
+    object-fit: contain;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.character-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: white;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 180px;
+}
+
+.character-card img {
+    filter: contrast(1.4) brightness(1.1);
+    image-rendering: auto !important;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    max-width: 140px;
+    max-height: 140px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Additional hover effects */
+.character-card:hover img {
+    filter: contrast(1.5) brightness(1.15);
+}
+
+/* Selected card state */
+.character-card.user-selected {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border: 3px solid var(--pastel-blue);
+}
+
+/* Card states for results */
+.character-card.true-match {
+    border: 3px solid var(--pastel-green);
+    box-shadow: 0 8px 20px rgba(140, 212, 175, 0.3);
+}
+
+.character-card.predicted {
+    border: 3px solid #82c8e6;
+    box-shadow: 0 8px 20px rgba(130, 200, 230, 0.3);
+}
+
+.character-card.incorrect {
+    border: 3px solid #ffb0b0;
+    box-shadow: 0 8px 20px rgba(255, 176, 176, 0.3);
+}
+
+/* Enhance visibility */
+.score-badge {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 5px 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.show-scores .score-badge {
+    opacity: 1;
+}
+
+/* Add subtle animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 20px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Tada animation for correct option */
+@keyframes tada {
+    0% {transform: scale(1);}
+    10%, 20% {transform: scale(0.9) rotate(-3deg);}
+    30%, 50%, 70%, 90% {transform: scale(1.1) rotate(3deg);}
+    40%, 60%, 80% {transform: scale(1.1) rotate(-3deg);}
+    100% {transform: scale(1) rotate(0);}
+}
+
+.tada {
+    animation: tada 1s ease-in-out;
+}
+
+/* Shake animation for wrong option */
+@keyframes shake {
+    0%, 100% {transform: translateX(0);}
+    10%, 30%, 50%, 70%, 90% {transform: translateX(-5px);}
+    20%, 40%, 60%, 80% {transform: translateX(5px);}
+}
+
+.shake {
+    animation: shake 0.8s ease-in-out;
+}
+
+/* Highlight animations for true match */
+@keyframes highlight-pulse {
+    0% {box-shadow: 0 0 0 0 rgba(140, 212, 175, 0.7);}
+    70% {box-shadow: 0 0 0 15px rgba(140, 212, 175, 0);}
+    100% {box-shadow: 0 0 0 0 rgba(140, 212, 175, 0);}
+}
+
+.highlight-correct {
+    animation: highlight-pulse 1.5s infinite;
+    border: 3px solid var(--pastel-green) !important;
+}
+
+/* For devices with hover capabilities */
+@media (hover: hover) {
+    .character-card:hover {
+        transform: translateY(-5px) scale(1.05);
+    }
+}
+
+/* Character container positioning */
+.character-container {
+    position: relative;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Card number badges for easier reference */
+.card-number {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 24px;
+    height: 24px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--text-color);
+    font-weight: bold;
+    font-size: 0.9rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+/* Focus states for accessibility */
+.character-card:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(184, 227, 255, 0.5);
+}
